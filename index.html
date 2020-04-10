@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="/ext/bootstrap.min.css">
+    <script src="/ext/jquery-3.4.1.min.js"></script>
+    <script src="/ext/bootstrap.bundle.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        #messages { height: 500px; border: 1px solid black; overflow: auto; width: 95%; margin: auto; background-color:white;}
+        #kopf { padding:0; box-shadow: 0 5px 5px silver;}
+        #kopf h1 { text-align: center; }
+        #eingabe { box-shadow: 0 -5px 5px silver; }
+        .messi { border-bottom: 1px solid silver; }
+        .messi h4 { margin-bottom:0; }
+        .messi .messdate { font-size:.8em; color:darkred; }
+		.messi p.messbody {
+			margin-top: 0;
+    		margin-bottom: 1rem;
+    		word-break: break-word;
+    		line-break: inherit;
+    		display: block;
+        	white-space: pre-line;
+		}
+        span.wuerfel {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            text-align: center;
+            margin-right: 5px;
+            padding-top: 3px;
+            background-size: 25px 25px;
+            background-image: url(./img/dSonst.png);
+        }
+		span.wuerfel {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            text-align: center;
+            margin-right: 5px;
+            padding-top: 3px;
+            background-size: 25px 25px;
+            background-image: url(./img/d6.png);
+        }
+        span.wuerfel.W10 {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            margin-right: 5px;
+            padding-top: 5px;
+            background-size: 30px 30px;
+            background-image: url(./img/d10.png);
+        }
+        span.wuerfel.W10.erfolg {
+            background-color:lightgreen;
+        }
+		span.wuerfel.W10.supererfolg {
+            background-color:orange;
+        }
+        span.wuerfel.W12 {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            text-align: center;
+            margin-right: 5px;
+            padding-top: 3px;
+            background-size: 25px 25px;
+            background-image: url(./img/d12.png);
+        }
+        span.wuerfel.W4 {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            text-align: center;
+            margin-right: 5px;
+            padding-top: 7px;
+            background-size: 25px 25px;
+            background-image: url(./img/d4.png);
+        }
+        span.wuerfel.W20 {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            text-align: center;
+            margin-right: 5px;
+            padding-top: 3px;
+            background-size: 25px 25px;
+            background-image: url(./img/d20.png);
+        }
+    </style>
+
+</head>
+<body>
+    <div class="jumbotron" id="kopf">
+        <h1>-=Köpps WürfelChat=-</h1>
+    </div>
+    <div id="messages" class="jumbotron"></div><br>
+    <div class="jumbotron" id="eingabe">
+        <input id = "name" class="form-control" placeholder="Name">
+        <br>
+        <textarea id = "message" class="form-control" placeholder="Quasselbox"></textarea>
+        <br>
+        <button id="send" class="btn btn-success">Senden</button>
+        <br><br>
+        <button id="w10minus" class="btn btn-info">-</button><button id="w10" class="btn btn-success">1W10</button><button id="w10plus" class="btn btn-info">+</button>
+    </div>
+<script>
+    const datoptions = { year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', minute: 'numeric', second:'numeric' };
+    // Initialisieren der Buttons:
+    $(() => {
+        $("#send").click(()=>{ sendMessage({name: $("#name").val(), message: $("#message").val(), zeitpunkt: new Date()}); });
+
+        $("#w10plus").click(()=>{
+            let alt=$("#w10").html();
+            let anz=parseInt(alt.split('W')[0]);
+            anz++;
+            $("#w10").html(anz+'W10');
+        });
+
+        $("#w10minus").click(()=>{
+            let alt=$("#w10").html();
+            let anz=parseInt(alt.split('W')[0]);
+            anz--;
+            $("#w10").html(anz+'W10');
+        });
+
+        $("#w10").click(()=>{
+            let text=$("#w10").html();
+            let anz=parseInt(text.split('W')[0]);
+            let mes=$("#message").val();
+            $("#message").val(mes+' !('+anz+'d10)');
+        });
+
+        getMessageHistory();
+    });
+
+    // Alte Nachrichten einpflegen, nur beim ersten Start.
+    function getMessageHistory(){
+        $.get("http://grid.superdau.de:3000/messages", (data) => { 
+            $.each(data, (key, message) => {
+                let zp = new Date(message.zeitpunkt);
+                $("#messages").append('<div class="messi"><h4>'+message.name+'</h4><p class="messdate">'+zp.toLocaleDateString('de-DE', datoptions)+'</p><p><p class="messbody">'+message.message+'</p></p><div>');
+            });
+            $("#messages").animate({scrollTop: $('#messages').prop("scrollHeight")}, 500);
+        });
+    }
+
+    // Neue Nachricht einpflegen, wird über Websocket gedrückt!
+    function addMessages(message) {
+        let zp = new Date(message.zeitpunkt);
+        if (message.message=='Der kleine Prinz ist nun sauber!') $("#messages").html('');
+        $("#messages").append('<div class="messi"><h4>'+message.name+'</h4><p class="messdate">'+zp.toLocaleDateString('de-DE', datoptions)+'</p><p><p class="messbody">'+message.message+'</p></p><div>');
+        $("#messages").animate({scrollTop: $('#messages').prop("scrollHeight")}, 500);
+    }
+
+    // Neue Nachricht an Server senden:
+    function sendMessage(message){
+        $.post("http://grid.superdau.de:3000/messages", message);
+        $("#message").val("");
+    }
+
+    // Websocket initialisieren und Event binden.. 
+    var socket = io();
+    socket.on("message", addMessages);
+</script>
+</body>
+</html>
