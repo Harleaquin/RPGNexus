@@ -22,9 +22,9 @@ app.use(bodyParser.urlencoded({extended: false}))
 const dbUrl = "mongodb://testuser:testpass@localhost/test";
 
 let Message = mongoose.model('Message',{
-  name : String,
-  message : String,
-  zeitpunkt: Date
+	name : String,
+	message : String,
+	zeitpunkt: Date
 })
 
 // Exalted Würfelparsing überschreibt vanilla Parsingfunktion
@@ -48,58 +48,57 @@ class ExaltedParser extends W12.Parser {
 
 // Kommando Parsing
 function parseMessage(req) {
-  if (req.body.message.includes('!(') && req.body.message.includes(')')) {
-    let inhalt = req.body.message.split('!(')[1].split(')')[0];
-    if (inhalt.includes('PURGE')) {
-      req.body.message="Der kleine Prinz ist nun sauber!";
-      Message.deleteMany({}, () => { });
-    }
-    else if (inhalt.includes('HILFE')) {
-      req.body.message=JSON.stringify(HILFE);
-    }
-    else if (inhalt.includes('SETTINGS')) {
-      req.body.message=JSON.stringify(SETTINGS);
-    }
-    else if (inhalt.includes('{') && inhalt.includes('}')) {
-      let json = JSON.parse(inhalt);
-      SETTINGS=Object.assign(SETTINGS, json);
-      req.body.message=JSON.stringify(SETTINGS);
-    }   
-    // !(NdW) - Würfle N dW ...
-    // TODO: sauberes PatternMatching
-    else if (inhalt.includes('d')) {
-      let anzahl=inhalt.split('d')[0];
-      let wuerfel=inhalt.split('d')[1];
-	  let becher=new W12.Becher();
-      for (let i=0; i<anzahl; i++) becher.add(new W12.Wuerfel(wuerfel));
-	  becher.roll();
-	  // Ab hier Exaltedspezifisch
-	  let exaltedParser=new ExaltedParser();
-	  let vanillaParser=new W12.Parser();
-	  let ergebnis="";
-	  console.log(wuerfel)
-      if (wuerfel=="10") ergebnis=exaltedParser.parse(becher); 
-	  else ergebnis=vanillaParser.parse(becher); 
-      req.body.message=req.body.message.replace('!('+inhalt+')',ergebnis);
-    }
-  }
+	if (req.body.message.includes('!(') && req.body.message.includes(')')) {
+		let inhalt = req.body.message.split('!(')[1].split(')')[0];
+		if (inhalt.includes('PURGE')) {
+			req.body.message="Der kleine Prinz ist nun sauber!";
+			Message.deleteMany({}, () => { });
+		}
+		else if (inhalt.includes('HILFE')) {
+			req.body.message=JSON.stringify(HILFE);
+		}
+		else if (inhalt.includes('SETTINGS')) {
+			req.body.message=JSON.stringify(SETTINGS);
+		}
+		else if (inhalt.includes('{') && inhalt.includes('}')) {
+			let json = JSON.parse(inhalt);
+			SETTINGS=Object.assign(SETTINGS, json);
+			req.body.message=JSON.stringify(SETTINGS);
+		}   
+		// !(NdW) - Würfle N dW ...
+		// TODO: sauberes PatternMatching
+		else if (inhalt.includes('d')) {
+			let anzahl=inhalt.split('d')[0];
+			let wuerfel=inhalt.split('d')[1];
+			let becher=new W12.Becher();
+			for (let i=0; i<anzahl; i++) becher.add(new W12.Wuerfel(wuerfel));
+			becher.roll();
+			// Ab hier Exaltedspezifisch
+			let exaltedParser=new ExaltedParser();
+			let vanillaParser=new W12.Parser();
+			let ergebnis="";
+			if (wuerfel=="10") ergebnis=exaltedParser.parse(becher); 
+			else ergebnis=vanillaParser.parse(becher); 
+			req.body.message=req.body.message.replace('!('+inhalt+')',ergebnis);
+		}
+	}
 }
 // Kommando Parsing Ende
 
 // DB-Binding GET:
 app.get('/messages', (req, res) => {
-  Message.find({},(err, messages) => { res.send(messages); });
+	Message.find({},(err, messages) => { res.send(messages); });
 });
 
 // DB-Bindinge POST:
 app.post('/messages', (req, res) => {
-  parseMessage(req);
-  let message = new Message(req.body);
-  message.save((err) => {
-    if(err) sendStatus(500);
-    io.emit('message', req.body); // Websocket Rückmeldung
-    res.sendStatus(200);
-  });
+	parseMessage(req);
+	let message = new Message(req.body);
+	message.save((err) => {
+		if(err) sendStatus(500);
+		io.emit('message', req.body); // Websocket Rückmeldung
+		res.sendStatus(200);
+	});
 });
 
 io.on('connection', () => { console.log('Neuer Client verbunden...'); });
