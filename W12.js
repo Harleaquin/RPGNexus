@@ -57,14 +57,11 @@ BECHER.prototype.parse = function(_mw) {
 
 // WurfParser Template, kann/soll überschrieben werden
 class PARSER {
-	Mindestwurf=-1;
 	erg="";
 	parse(_becher) {
 		this.erg="<div class='werg'>";
 		for (let i=0; i<_becher.arr.length; i++) {
-				let erfolg="";
-				if (this.Mindestwurf>0 && parseInt(_becher.arr[i].erg)>=this.Mindestwurf) erfolg="erfolg";
-				this.erg+="<span class='wuerfel "+erfolg+" "+_becher.arr[i].typ+"'>"+_becher.arr[i].erg+"</span>";
+			this.erg+="<span class='wuerfel "+_becher.arr[i].typ+"'>"+_becher.arr[i].erg+"</span>";
 		}
 		this.erg+="</div>";
 		return this.erg;

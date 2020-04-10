@@ -30,15 +30,16 @@ let Message = mongoose.model('Message',{
 // Exalted Würfelparsing überschreibt vanilla Parsingfunktion
 class ExaltedParser extends W12.Parser {
 	parse(_becher) {
-		console.log("Exalted");
 		this.erfolge=0;
 		this.zehner=0;
+		this.einser=0;
 		this.erg="<div class='werg'>";
 		for (let i=0; i<_becher.arr.length; i++) {
-				let erfolg="";
-				if (parseInt(_becher.arr[i].erg)>=7) { erfolg="erfolg"; this.erfolge++;}
-				if (parseInt(_becher.arr[i].erg)==10) {erfolg="supererfolg"; this.erfolge++; this.zehner++;}
-				this.erg+="<span class='wuerfel "+erfolg+" "+_becher.arr[i].typ+"'>"+_becher.arr[i].erg+"</span>";
+			let erfolg="";
+			if (parseInt(_becher.arr[i].erg)>=7) { erfolg="erfolg"; this.erfolge++; }
+			if (parseInt(_becher.arr[i].erg)==10) { erfolg="supererfolg"; this.erfolge++; this.zehner++; }
+			if (parseInt(_becher.arr[i].erg)==1) { erfolg="einser"; this.einser++; }
+			this.erg+="<span class='wuerfel "+erfolg+" "+_becher.arr[i].typ+"'>"+_becher.arr[i].erg+"</span>";
 		}
 		this.erg+="</div>";
 		this.erg+='<p>Erfolge: '+this.erfolge+' ('+(this.erfolge-this.zehner)+')</p>';
