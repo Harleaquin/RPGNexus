@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="/ext/bootstrap.min.css">
     <script src="/ext/jquery-3.4.1.min.js"></script>
     <script src="/ext/bootstrap.bundle.min.js"></script>
+    <script src="/ext/js.cookie.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <style>
         #messages { height: 500px; border: 1px solid black; overflow: auto; width: 95%; margin: auto; background-color:white;}
@@ -13,6 +14,10 @@
         #eingabe { box-shadow: 0 -5px 5px silver; }
         .messi { border-bottom: 1px solid silver; }
         .messi h4 { margin-bottom:0; }
+        .messi .whispers {
+            text-shadow: 3px 3px 4px #303;
+            font-family: monospace;
+        }
         .messi .messdate { font-size:.8em; color:darkred; }
 		.messi p.messbody {
 			margin-top: 0;
@@ -21,7 +26,11 @@
     		line-break: inherit;
     		display: block;
         	white-space: pre-line;
-		}
+        }
+        .messi p.messbody img{
+            max-width:100%;
+            max-height:300px;
+        }
         span.wuerfel {
             display: inline-block;
             width: 25px;
@@ -48,7 +57,7 @@
             height: 30px;
             text-align: center;
             margin-right: 5px;
-            padding-top: 5px;
+            padding-top: 2px;
             background-size: 30px 30px;
             background-image: url(./img/d10.png);
         }
@@ -109,7 +118,17 @@
     const datoptions = { year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', minute: 'numeric', second:'numeric' };
     // Initialisieren der Buttons:
     $(() => {
+        $('#name').val(Cookies.get('ChatName'));
+        $('#name').keyup(function (e) {
+            Cookies.set('ChatName', $('#name').val());
+        });
+
         $("#send").click(()=>{ sendMessage({name: $("#name").val(), message: $("#message").val(), zeitpunkt: new Date()}); });
+        $('#message').keydown(function (e) {
+            if (e.ctrlKey && e.keyCode == 13) {
+                sendMessage({name: $("#name").val(), message: $("#message").val(), zeitpunkt: new Date()});
+            }
+        });
 
         $("#w10plus").click(()=>{
             let alt=$("#w10").html();

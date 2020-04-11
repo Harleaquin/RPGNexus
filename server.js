@@ -42,7 +42,9 @@ class ExaltedParser extends W12.Parser {
 			this.erg+="<span class='wuerfel "+erfolg+" "+_becher.arr[i].typ+"'>"+_becher.arr[i].erg+"</span>";
 		}
 		this.erg+="</div>";
-		this.erg+='<p>Erfolge: '+this.erfolge+' ('+(this.erfolge-this.zehner)+')</p>';
+		this.botch="";
+		if (this.erfloge==0 && this.einser>0) this.botch=" <b>Sauber gebotched, Sir Botchalot!</b>";
+		this.erg+='<p>Erfolge: '+this.erfolge+' ('+(this.erfolge-this.zehner)+')'+this.botch+'</p>';
 		return this.erg;
 	}
 }
@@ -51,7 +53,15 @@ class ExaltedParser extends W12.Parser {
 function parseMessage(req) {
 	if (req.body.message.includes('!(') && req.body.message.includes(')')) {
 		let inhalt = req.body.message.split('!(')[1].split(')')[0];
-		if (inhalt.includes('PURGE')) {
+
+		if (inhalt.includes('GAME')) {
+			req.name="<span class='whispers'>Whisper from the Abyss:</span>";
+			req.body.message="<b>YOU JUST LOST THE GAME</b>";
+		}
+		else if (inhalt.includes('DAY')) {
+			req.body.message="<img src='/dox/DayCasteSmall.png'>";
+		}
+		else if (inhalt.includes('PURGE')) {
 			req.body.message="Der kleine Prinz ist nun sauber!";
 			Message.deleteMany({}, () => { });
 		}
